@@ -1,0 +1,3 @@
+[submodule "docker/easy-pwn"]
+	path = docker/easy-pwn
+	url = https://github.com/rmayobre/easy-pwn
