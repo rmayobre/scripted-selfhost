@@ -1,0 +1,25 @@
+#!/bin/sh
+
+. /etc/rc.subr
+
+name="filebrowser_web"
+rcvar="${name}_enable"
+
+filebrowser_dir="/root/"        # Change to desired directory.
+filebrowser_addr="127.0.0.1"    # Change to jail's ip address.
+filebrowser_logs="/var/log/filebrowser_web"
+filebrowser_proc="/usr/local/bin/filebrowser"
+
+pidfile="/var/run/${name}.pid"
+supervisor_pidfile="/var/run/${name}-daemon.pid"
+
+command="${filebrowser_proc}"
+command_args="-r ${filebrowser_dir}"
+
+start_precmd="${filebrowser_proc} config set --address ${filebrowser_addr}"
+start_cmd="/usr/sbin/daemon -p ${pidfile} -P ${supervisor_pidfile} $command $command_args >> ${filebrowser_logs} 2>&1"
+
+load_rc_config $name
+: ${filebrowser_web_enable:=no}
+
+run_rc_command "$1"

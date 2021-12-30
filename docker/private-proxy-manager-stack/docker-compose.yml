@@ -1,0 +1,47 @@
+version: "3.7"
+
+volumes:
+  nginx-data:
+  nginx-letsencrypt:
+  nginx-db:
+
+networks:
+  private-proxy-network:
+    name: private-proxy-network
+    ipam:
+      driver: default
+      config:
+        - subnet: 10.10.10.0/24
+
+services:
+  app:
+    image: 'jc21/nginx-proxy-manager:latest'
+    container_name: private-nginx-manager
+    restart: unless-stopped
+    depends_on:
+      - db
+    environment:
+      DB_MYSQL_HOST: "10.10.10.5" # IP address to db
+      DB_MYSQL_PORT: 3306
+      DB_MYSQL_USER: "nginx"  # Change to match db
+      DB_MYSQL_PASSWORD: "CHANGE_ME" # Change to match db
+      DB_MYSQL_NAME: "nginx" # Change to match db
+    volumes:
+      - nginx-data:/data
+      - nginx-letsencrypt:/etc/letsencrypt
+    networks:
+      private-proxy-network:
+  db:
+    image: 'jc21/mariadb-aria:latest'
+    container_name: private-nginx-db
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: 'CHANGE_ME' # Change to be secure
+      MYSQL_DATABASE: 'nginx' # Change to be secure; must match app
+      MYSQL_USER: 'nginx' # Change to be secure; must match app
+      MYSQL_PASSWORD: 'CHANGE_ME' # Change to be secure; must match app
+    volumes:
+      - nginx-db:/var/lib/mysql
+    networks:
+      private-proxy-network:
+        ipv4_address: 10.10.10.5

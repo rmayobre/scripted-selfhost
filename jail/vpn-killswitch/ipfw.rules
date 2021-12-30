@@ -1,0 +1,22 @@
+#!/bin/sh
+# Flush out the list before we begin
+ipfw -q -f flush
+
+# Set rules command prefix
+set cmd="ipfw -q add"
+set vpn="tun0"
+set user="user" # Change this to the correct user
+set iprange="192.168.0.0/24" # Change this to the appropriate range.
+
+# allow all local traffic on the loopback interface
+$cmd 00001 allow all from any to any via lo0
+
+# allow any connection to/from VPN interface
+$cmd 00010 allow all from any to any via $vpn
+
+# allow connection to/from LAN by user
+$cmd 00101 allow all from me to $iprange uid $user
+$cmd 00102 allow all from $iprange to me uid $user
+
+# deny any connection outside of LAN that does not use VPN
+$cmd 00103 deny all from any to any uid $user

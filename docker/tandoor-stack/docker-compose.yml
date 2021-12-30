@@ -1,0 +1,45 @@
+version: "3"
+
+networks:
+  tandoor-network:
+    name: tandoor-network
+
+volumes:
+  mediafiles:
+    name: tandoor-media
+  staticfiles:
+    name: tandoor-static
+  database:
+    name: tandoor-db
+
+services:
+  db:
+    container_name: tandoor-db
+    restart: unless-stopped
+    image: postgres:11-alpine
+    environment:
+      POSTGRES_PASSWORD: CHANGE_ME # must match app!
+      POSTGRES_USER: djangodb
+    volumes:
+      - database:/var/lib/postgresql/data
+    networks:
+      - tandoor-network
+
+  app:
+    container_name: tandoor-app
+    image: vabene1111/recipes
+    restart: unless-stopped
+    environment:
+      DB_ENGINE: django.db.backends.postgresql
+      POSTGRES_HOST: tandoor-db
+      POSTGRES_USER: djangodb
+      POSTGRES_PASSWORD: CHANGE_ME # must match db!
+      POSTGRES_PORT: 5432
+      POSTGRES_DB: djangodb
+    volumes:
+      - staticfiles:/opt/recipes/staticfiles
+      - mediafiles:/opt/recipes/mediafiles
+    depends_on:
+      - db
+    networks:
+      - tandoor-network
