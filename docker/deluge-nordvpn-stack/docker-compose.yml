@@ -1,0 +1,33 @@
+version: "3.7"
+
+services:
+  vpn:
+    image: ghcr.io/bubuntux/nordvpn
+    restart: unless-stopped
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+    environment:
+      - USER=username@email.com # change to your username
+      - "PASS=p@ssword" # change to your password
+      - CONNECT=Switzerland # change to desired region/country
+      - TECHNOLOGY=NordLynx # don't change unless you want OpenVPN
+      - NETWORK=192.168.0.0/24
+      - PORTS=8112:8112
+    ports:
+      - 8112:8112
+    sysctls:
+      - net.ipv6.conf.all.disable_ipv6=1
+  deluge:
+    image: lscr.io/linuxserver/deluge
+    restart: unless-stopped
+    network_mode: service:vpn
+    depends_on:
+      - vpn
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - DELUGE_LOGLEVEL=error
+    volumes:
+      - /path/to/deluge/config:/config # Change to desired config volume location
+      - /path/to/your/downloads:/downloads # Downloads go here - change to desired path
