@@ -1,12 +1,9 @@
 version: "3.7"
 
-volumes:
-  deluge-config:
-    name: deluge
-
 services:
   vpn:
     image: ghcr.io/bubuntux/nordvpn
+    restart: unless-stopped
     cap_add:
       - NET_ADMIN
       - NET_RAW
@@ -32,5 +29,5 @@ services:
       - PGID=1000
       - DELUGE_LOGLEVEL=error
     volumes:
-      - deluge-config:/config
-      - /path/to:/mnt/library # Downloads go here - change to desired path
+      - /path/to/deluge/config:/config # Change to desired config volume location
+      - /path/to/your/downloads:/downloads # Downloads go here - change to desired path
