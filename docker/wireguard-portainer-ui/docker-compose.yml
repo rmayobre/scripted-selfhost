@@ -24,6 +24,8 @@ services:
     environment:
       - PUID=1000
       - PGID=1000
+    networks:
+      - portainer-network
     volumes:
       - ./wireguard:/config # Change this to the directory of you wg0.conf file.
       - /lib/modules:/lib/modules
@@ -38,9 +40,7 @@ services:
     restart: unless-stopped
     volumes:
       - portainer-data-volume:/data
-    networks:
-      - portainer-network
-
+      
   # Portainer Agent Service
   agent:
     image: portainer/agent
