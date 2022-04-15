@@ -1,5 +1,13 @@
 version: "3.9"
 
+networks:
+  portainer-network:
+    name: portainer-network
+    ipam:
+      driver: default
+      config:
+        - subnet: 10.3.0.0/24
+
 volumes:
   portainer-data-volume:
     name: portainer-data
@@ -30,6 +38,8 @@ services:
     restart: unless-stopped
     volumes:
       - portainer-data-volume:/data
+    networks:
+      - portainer-network
 
   # Portainer Agent Service
   agent:
@@ -39,3 +49,6 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - /var/lib/docker/volumes:/var/lib/docker/volumes
+    networks:
+      portainer-network:
+        ipv4_address: 10.3.0.5 # Use this address to connection to agent from portainer UI.
