@@ -1,0 +1,43 @@
+version: "3.9"
+
+networks:
+  ghost-network:
+    name: ghost-network
+    ipam:
+      driver: default
+      config:
+        - subnet: 10.10.9.0/24
+
+services:
+  # Ghost CMS service
+  ghost:
+    image: ghost:4-alpine
+    container_name: ghost
+    restart: unless-stopped
+    ports:
+      - 2368:2368
+    environment:
+      database__client: mysql
+      database__connection__host: db
+      database__connection__user: root
+      database__connection__password: password # Change me - match db
+      database__connection__database: ghost
+      # Change to match URL of your Ghost CMS portal. NOTE this is optional and can 
+      # be removed. The Ghost portal will default to your URL declared with the path "/ghost"
+      admin: https://ghost.example.com 
+      url: https://blog.example.com # Change to match your website's URL
+    volumes:
+      - /path/to/content:/var/lib/ghost/content # Change me
+    networks:
+      - ghost-network
+  # Database for Ghost
+  db:
+    image: mysql:8.0
+    container_name: mysql-db
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: password # Change me - match ghost
+    volumes:
+      - /path/to/database:/var/lib/mysql # Change me
+    networks:
+      - ghost-network
