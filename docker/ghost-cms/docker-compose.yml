@@ -27,7 +27,7 @@ services:
       admin: https://ghost.example.com 
       url: https://blog.example.com # Change to match your website's URL
     volumes:
-      - /path/to/content:/var/lib/ghost/content
+      - /path/to/content:/var/lib/ghost/content # Change me
     networks:
       - ghost-network
   # Database for Ghost
