@@ -1,0 +1,38 @@
+version: "3.9"
+
+volumes:
+  certs-volume:
+
+services:
+  traefik:
+    image: traefik:v2.4
+    container_name: traefik
+    hostname: traefik
+    restart: unless-stopped
+    environment:
+      - LINODE_TOKEN=[CHANGE ME!] # Get Linode API token
+    command:
+      - --providers.docker=true
+      - --providers.docker.exposedbydefault=false
+      - --certificatesresolvers.letsencrypt.acme.dnschallenge=true
+      - --certificatesresolvers.letsencrypt.acme.dnschallenge.provider=linode
+      - --certificatesresolvers.letsencrypt.acme.email=[CHANGEME!] # Domain's email
+      - --certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json
+      - --entrypoints.web.address=:80
+      - --entrypoints.web.http.redirections.entrypoint.to=websecure
+      - --entrypoints.web.http.redirections.entrypoint.scheme=https
+      - --entrypoints.websecure.address=:443
+      - --entrypoints.websecure.forwardedHeaders.insecure=true
+      - --entrypoints.websecure.http.tls=true
+      - --entrypoints.websecure.http.tls.certResolver=letsencrypt
+      - --entrypoints.websecure.http.tls.domains[0].main=example.com # Change to your domain
+      - --entrypoints.websecure.http.tls.domains[0].sans=*.example.com # Change to your domain
+      - '--log=true'
+      - '--log.level=DEBUG'
+      - '--log.filepath=/var/log/traefik.log'
+    ports:
+      - "80:80/tcp"
+      - "443:443/tcp"    
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - certs-volume:/letsencrypt

@@ -1,0 +1,83 @@
+version: '3'
+
+networks:
+  public-network:
+    driver: bridge
+
+services:
+
+  traefik:
+    image: traefik:v2.2
+    container_name: traefik
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - public-network
+    labels:
+      - 'traefik.enable=true'
+      # Change to your domain
+      - 'traefik.http.routers.api.rule=Host(`traefik.example.com`)'
+      - 'traefik.http.routers.api.entrypoints=https'
+      - 'traefik.http.routers.api.service=api@internal'
+      - 'traefik.http.routers.api.tls=true'
+    ports:
+      - 80:80
+      - 443:443
+    command:
+      - '--api'
+      - '--providers.docker=true'
+      - '--providers.docker.exposedByDefault=false'
+      - '--entrypoints.http=true'
+      - '--entrypoints.http.address=:80'
+      - '--entrypoints.http.http.redirections.entrypoint.to=https'
+      - '--entrypoints.http.http.redirections.entrypoint.scheme=https'
+      - '--entrypoints.https=true'
+      - '--entrypoints.https.address=:443'
+      - '--log=true'
+      - '--log.level=DEBUG'
+      - '--log.filepath=/var/log/traefik.log'
+
+  authelia:
+    image: authelia/authelia
+    container_name: authelia
+    volumes:
+      - /path/to/authelia:/config # change to your volume 
+    networks:
+      - public-network
+    labels:
+      - 'traefik.enable=true'
+      # Change to your login/auth domain (where you login)
+      - 'traefik.http.routers.authelia.rule=Host(`login.example.com`)'
+      - 'traefik.http.routers.authelia.entrypoints=https'
+      - 'traefik.http.routers.authelia.tls=true'
+      # update rd parameter to your login URL.
+      - 'traefik.http.middlewares.authelia.forwardauth.address=http://authelia:9091/api/verify?rd=https://login.example.com/'
+      - 'traefik.http.middlewares.authelia.forwardauth.trustForwardHeader=true'
+      - 'traefik.http.middlewares.authelia.forwardauth.authResponseHeaders=Remote-User, Remote-Groups, Remote-Name, Remote-Email'
+      - 'traefik.http.middlewares.authelia-basic.forwardauth.address=http://authelia:9091/api/verify?auth=basic'
+      - 'traefik.http.middlewares.authelia-basic.forwardauth.trustForwardHeader=true'
+      - 'traefik.http.middlewares.authelia-basic.forwardauth.authResponseHeaders=Remote-User, Remote-Groups, Remote-Name, Remote-Email'
+    expose:
+      - 9091
+    restart: unless-stopped
+    environment:
+      - TZ=Australia/Melbourne # change to your timezone
+
+# ##################
+# Service template #
+# ##################
+
+  # my-service:
+  #   image: my-image
+  #   networks:
+  #     - public-network
+  #   labels:
+  #     - 'traefik.enable=true'
+  #     # Update to your domain and subdomain for this service.
+  #     - 'traefik.http.routers.nextcloud.rule=Host(`subdomain.example.com`)'
+  #     - 'traefik.http.routers.nextcloud.entrypoints=https'
+  #     - 'traefik.http.routers.nextcloud.tls=true'
+  #     - 'traefik.http.routers.nextcloud.middlewares=authelia@docker'
+  #   expose: # Expose any required ports for this service.
+  #     - 443
+  #   restart: unless-stopped
