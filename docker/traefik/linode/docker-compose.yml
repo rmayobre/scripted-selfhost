@@ -1,0 +1,70 @@
+version: "3.9"
+
+networks:
+  public-network:
+    external: true
+    name: public
+    driver: bridge
+
+volumes:
+  certs-volume:
+    name: traefik-certs
+
+services:
+  traefik:
+    image: traefik:v2.4
+    container_name: traefik
+    restart: unless-stopped
+    ports:
+      - 80:80
+      - 443:443
+      - 8080:8080
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - certs-volume:/letsencrypt
+    networks:
+      - public-network
+    environment:
+      - LINODE_TOKEN=[CHANGE ME!] # Get Linode API token
+    command:
+      - --api.dashboard=true
+      - --api.insecure=true
+      - --providers.docker=true
+      - --providers.docker.exposedbydefault=false
+      - --providers.docker.network=public
+      - --certificatesresolvers.letsencrypt.acme.dnschallenge=true
+      - --certificatesresolvers.letsencrypt.acme.dnschallenge.provider=linode
+      - --certificatesresolvers.letsencrypt.acme.email=CHANGE_ME # Domain's email
+      - --certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json
+      - --entrypoints.web.address=:80
+      - --entrypoints.web.http.redirections.entrypoint.to=websecure
+      - --entrypoints.web.http.redirections.entrypoint.scheme=https
+      - --entrypoints.websecure.address=:443
+      - --entrypoints.websecure.http.tls=true
+      - --entrypoints.websecure.http.tls.certResolver=letsencrypt
+      - --entrypoints.websecure.http.tls.domains[0].main=CHANGE_ME.com # Change to your domain
+      - --entrypoints.websecure.http.tls.domains[0].sans=*.CHANGE_ME.com # Change to your domain
+      - --log=true
+      - --log.level=DEBUG
+      - --log.filepath=/var/log/traefik.log
+
+# ########################################################### #
+#                                                             #
+# Docker service template that uses Traefik as Reverse Proxy. #
+#                                                             #
+# ########################################################### #
+
+  # service-template: # Change
+  #   image: service-image # Change
+  #   restart: unless-stopped
+  #   networks:
+  #     - public-network
+  #   labels:
+  #     - traefik.docker.network=public
+  #     - traefik.enable=true
+  #     # Change SERVICE_NAME to the name of your service
+  #     - traefik.http.routers.SERVICE_NAME.entrypoints=websecure
+  #     - traefik.http.routers.SERVICE_NAME.rule=Host(`subdomain.CHANGEME.com`) # Change to your domain
+  #     - traefik.http.routers.SERVICE_NAME.tls=true
+  #     - traefik.http.routers.SERVICE_NAME.tls.certresolver=letsencrypt
+  #     - traefik.http.services.ghost.loadbalancer.server.port=99999 # Change to service port
