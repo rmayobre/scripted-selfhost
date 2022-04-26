@@ -31,7 +31,7 @@ services:
       - 80:80
       - 443:443
     labels:
-      - traefik.http.middlewares.crowdsec-bouncer.forwardauth.address=http://bouncer-traefik:8080/api/v1/forwardAuth
+      - traefik.http.middlewares.crowdsec-bouncer.forwardauth.address=http://crowdsec-bouncer:8080/api/v1/forwardAuth
       - traefik.http.middlewares.crowdsec-bouncer.forwardauth.trustForwardHeader=true
     command:
       - --api.insecure=true
@@ -40,11 +40,11 @@ services:
       - --certificatesresolvers.letsencrypt.acme.email=support@example.com # CHANGE ME
       - --certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json
       - --entrypoints.web.address=:80
-      - --entrypoints.web.http.middlewares=crowdsec-bouncer@file
+      - --entrypoints.web.http.middlewares=crowdsec-bouncer@docker
       - --entrypoints.web.http.redirections.entrypoint.to=websecure
       - --entrypoints.web.http.redirections.entrypoint.scheme=https
       - --entrypoints.websecure.address=:443
-      - --entrypoints.websecure.http.middlewares=crowdsec-bouncer@file
+      - --entrypoints.websecure.http.middlewares=crowdsec-bouncer@docker
       - --entrypoints.websecure.http.tls=true
       - --entrypoints.websecure.http.tls.certResolver=letsencrypt
       - --log=true
@@ -73,9 +73,9 @@ services:
     networks:
       - public-network
 
-  bouncer-traefik:
+  crowdsec-bouncer:
     image: fbonalair/traefik-crowdsec-bouncer
-    container_name: bouncer-traefik
+    container_name: crowdsec-bouncer
     environment:
       GIN_MODE: release # default is debug (more logs)
       CROWDSEC_BOUNCER_API_KEY: ChangeME # Change to bouncer api key
