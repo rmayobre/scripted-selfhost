@@ -1,0 +1,86 @@
+version: '3.9'
+ 
+networks:
+  public-network:
+    name: public
+    driver: bridge
+    
+volumes:
+  network-logs:
+    name: traefik-logs
+  certs-volume:
+    name: traefik-certs
+  crowdsec-db:
+    name: crowdsec-database
+  crowdsec-config:
+    name: crowdsec-config
+
+services:
+
+  traefik:
+    image: traefik:v2.4
+    container_name: traefik
+    restart: unless-stopped
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - certs-volume:/letsencrypt
+      - network-logs:/var/log/:ro
+    networks:
+      - public-network
+    ports:
+      - 80:80
+      - 443:443
+    labels:
+      - traefik.http.middlewares.crowdsec-bouncer.forwardauth.address=http://bouncer-traefik:8080/api/v1/forwardAuth
+      - traefik.http.middlewares.crowdsec-bouncer.forwardauth.trustForwardHeader=true
+    command:
+      - --api.insecure=true
+      - --certificatesresolvers.letsencrypt.acme.httpchallenge=true
+      - --certificatesresolvers.letsencrypt.acme.httpchallenge.entrypoint=web
+      - --certificatesresolvers.letsencrypt.acme.email=support@example.com # CHANGE ME
+      - --certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json
+      - --entrypoints.web.address=:80
+      - --entrypoints.web.http.middlewares=crowdsec-bouncer@file
+      - --entrypoints.web.http.redirections.entrypoint.to=websecure
+      - --entrypoints.web.http.redirections.entrypoint.scheme=https
+      - --entrypoints.websecure.address=:443
+      - --entrypoints.websecure.http.middlewares=crowdsec-bouncer@file
+      - --entrypoints.websecure.http.tls=true
+      - --entrypoints.websecure.http.tls.certResolver=letsencrypt
+      - --log=true
+      - --log.level=DEBUG
+      - --log.filepath=/var/log/traefik.log
+      - --providers.docker=true
+      - --providers.docker.exposedbydefault=false
+      - --providers.docker.network=public
+
+  crowdsec:
+    image: crowdsecurity/crowdsec
+    restart: unless-stopped
+    container_name: crowdsec
+    expose:
+      - 8080
+    environment:
+      COLLECTIONS: "crowdsecurity/linux crowdsecurity/traefik"
+      GID: "${GID-1000}"
+    depends_on:
+      - traefik
+    volumes:
+      - /path/to/crowdsec/acquis.yaml:/etc/crowdsec/acquis.yaml # Change Me!
+      - network-logs:/var/log/traefik/:ro
+      - crowdsec-db:/var/lib/crowdsec/data/
+      - crowdsec-config:/etc/crowdsec/
+    networks:
+      - public-network
+
+  bouncer-traefik:
+    image: fbonalair/traefik-crowdsec-bouncer
+    container_name: bouncer-traefik
+    environment:
+      GIN_MODE: release # default is debug (more logs)
+      CROWDSEC_BOUNCER_API_KEY: ChangeME # Change to bouncer api key
+      CROWDSEC_AGENT_HOST: crowdsec:8080
+    expose:
+      - 8080
+    networks:
+      - public-network
