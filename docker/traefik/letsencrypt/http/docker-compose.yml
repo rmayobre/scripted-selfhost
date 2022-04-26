@@ -17,7 +17,7 @@ services:
     image: traefik:v2.4
     container_name: traefik
     volumes:
-      - /var/run/docker.sock:/var/run/docker.sock # TODO - proxy docker sock
+      - /var/run/docker.sock:/var/run/docker.sock
       - certs-volume:/letsencrypt
       - network-logs:/var/log/
     networks:

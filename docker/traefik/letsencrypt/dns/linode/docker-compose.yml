@@ -42,6 +42,7 @@ services:
       - --entrypoints.websecure.address=:443
       - --entrypoints.websecure.http.tls=true
       - --entrypoints.websecure.http.tls.certResolver=letsencrypt
+      # You can add more domains by incrementing the domains array value.
       - --entrypoints.websecure.http.tls.domains[0].main=CHANGE_ME.com # Change to your domain
       - --entrypoints.websecure.http.tls.domains[0].sans=*.CHANGE_ME.com # Change to your domain
       - --log=true
