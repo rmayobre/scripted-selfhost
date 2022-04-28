@@ -2,11 +2,12 @@ version: "3.9"
 
 networks:
   public-network:
-    external: true
     name: public
     driver: bridge
 
 volumes:
+  network-logs:
+    name: traefik-logs
   certs-volume:
     name: traefik-certs
 
@@ -15,23 +16,15 @@ services:
     image: traefik:v2.4
     container_name: traefik
     restart: unless-stopped
-    ports:
-      - 80:80
-      - 443:443
-      - 8080:8080
     volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
+      - /var/run/docker.sock:/var/run/docker.sock:ro
       - certs-volume:/letsencrypt
+      - network-logs:/var/log/
     networks:
       - public-network
     environment:
-      - LINODE_TOKEN=[CHANGE ME!] # Get Linode API token
+      - LINODE_TOKEN=CHANGE_ME # Get Linode API token
     command:
-      - --api.dashboard=true
-      - --api.insecure=true
-      - --providers.docker=true
-      - --providers.docker.exposedbydefault=false
-      - --providers.docker.network=public
       - --certificatesresolvers.letsencrypt.acme.dnschallenge=true
       - --certificatesresolvers.letsencrypt.acme.dnschallenge.provider=linode
       - --certificatesresolvers.letsencrypt.acme.email=CHANGE_ME # Domain's email
@@ -48,6 +41,9 @@ services:
       - --log=true
       - --log.level=DEBUG
       - --log.filepath=/var/log/traefik.log
+      - --providers.docker=true
+      - --providers.docker.exposedbydefault=false
+      - --providers.docker.network=public
 
 # ########################################################### #
 #                                                             #
@@ -68,4 +64,4 @@ services:
   #     - traefik.http.routers.SERVICE_NAME.rule=Host(`subdomain.CHANGEME.com`) # Change to your domain
   #     - traefik.http.routers.SERVICE_NAME.tls=true
   #     - traefik.http.routers.SERVICE_NAME.tls.certresolver=letsencrypt
-  #     - traefik.http.services.ghost.loadbalancer.server.port=99999 # Change to service port
+  #     - traefik.http.services.SERVICE_NAME.loadbalancer.server.port=99999 # Change to service port

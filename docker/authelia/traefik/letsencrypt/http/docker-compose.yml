@@ -1,8 +1,15 @@
-version: '3'
+version: "3.9"
 
 networks:
   public-network:
+    name: public
     driver: bridge
+    
+volumes:
+  network-logs:
+    name: traefik-logs
+  certs-volume:
+    name: traefik-certs
 
 services:
 
@@ -10,7 +17,9 @@ services:
     image: traefik:v2.4
     container_name: traefik
     volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - certs-volume:/letsencrypt
+      - network-logs:/var/log/
     networks:
       - public-network
     ports:

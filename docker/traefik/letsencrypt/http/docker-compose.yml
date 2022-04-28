@@ -12,12 +12,12 @@ volumes:
     name: traefik-certs
 
 services:
-
   traefik:
     image: traefik:v2.4
     container_name: traefik
+    restart: unless-stopped
     volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
+      - /var/run/docker.sock:/var/run/docker.sock:ro
       - certs-volume:/letsencrypt
       - network-logs:/var/log/
     networks:
@@ -26,7 +26,6 @@ services:
       - 80:80
       - 443:443
     command:
-      - --api.insecure=true
       - --certificatesresolvers.letsencrypt.acme.httpchallenge=true
       - --certificatesresolvers.letsencrypt.acme.httpchallenge.entrypoint=web
       - --certificatesresolvers.letsencrypt.acme.email=support@example.com # CHANGE ME
@@ -63,4 +62,4 @@ services:
   #     - traefik.http.routers.SERVICE_NAME.rule=Host(`subdomain.CHANGEME.com`) # Change to your domain
   #     - traefik.http.routers.SERVICE_NAME.tls=true
   #     - traefik.http.routers.SERVICE_NAME.tls.certresolver=letsencrypt
-  #     - traefik.http.services.ghost.loadbalancer.server.port=99999 # Change to service port
+  #     - traefik.http.services.SERVICE_NAME.loadbalancer.server.port=99999 # Change to service port
