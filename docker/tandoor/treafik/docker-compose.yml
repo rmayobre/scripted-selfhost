@@ -3,25 +3,32 @@ version: "3.9"
 networks:
   public-network:
     external: true
+    name: public
   tandoor-network:
     name: tandoor-network
+    ipam:
+      driver: default
+      config:
+        - subnet: 10.10.10.0/24
+
+volumes:
+  tandoor-static:
+    name: tandoor-static
 
 services:
   tandoor-proxy:
     container_name: tandoor-proxy
     image: nginx:mainline-alpine
     restart: unless-stopped
-    env_file:
-      - ./.env
     volumes:
-      - /path/to/nginx_config:/etc/nginx/conf.d:ro
-      - /path/to/staticfiles:/static:ro
+      - /path/to/nginx:/etc/nginx/conf.d:ro
+      - tandoor-static:/static:ro
       - /path/to/mediafiles:/media:ro
     labels:
       - traefik.docker.network=public
       - traefik.enable=true
       - traefik.http.routers.tandoor.entrypoints=websecure
-      - traefik.http.routers.tandoor.rule=Host(`SUBDOMAIN.EXAMPLE.com`)
+      - traefik.http.routers.tandoor.rule=Host(`SUBDOMAIN.EXAMPLE.com`) # Change to your host routes.
       - traefik.http.routers.tandoor.tls=true
       - traefik.http.routers.tandoor.tls.certresolver=letsencrypt # change if you are not using Lets Encrypt
     depends_on:
@@ -35,13 +42,14 @@ services:
     image: vabene1111/recipes
     restart: unless-stopped
     volumes:
-      - /path/to/nginx_config:/opt/recipes/nginx/conf.d
-      - /path/to/staticfiles:/opt/recipes/staticfiles
+      - /path/to/nginx:/opt/recipes/nginx/conf.d
+      - tandoor-static:/static:ro
       - /path/to/mediafiles:/opt/recipes/mediafiles
     depends_on:
       - tandoor-db
     networks:
-      - tandoor-network
+      tandoor-network:
+        ipv4_address: 10.10.10.3
     environment:
       - DEBUG=0
       - SECRET_KEY=CHANGE_ME
@@ -52,6 +60,9 @@ services:
       - POSTGRES_PASSWORD=CHANGE_ME
       - POSTGRES_PORT=5432
       - POSTGRES_DB=djangodb
+      - SHOPPING_MIN_AUTOSYNC_INTERVAL=5
+      - REVERSE_PROXY_AUTH=0
+      - COMMENT_PREF_DEFAULT=1
       
   tandoor-db:
     container_name: tandoor-db
