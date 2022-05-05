@@ -21,9 +21,9 @@ services:
     image: nginx:mainline-alpine
     restart: unless-stopped
     volumes:
-      - /path/to/nginx:/etc/nginx/conf.d:ro
+      - ./nginx:/etc/nginx/conf.d:ro
       - tandoor-static:/static:ro
-      - /path/to/mediafiles:/media:ro
+      - /path/to/mediafiles:/media:ro # Update path
     labels:
       - traefik.docker.network=public
       - traefik.enable=true
@@ -42,9 +42,9 @@ services:
     image: vabene1111/recipes
     restart: unless-stopped
     volumes:
-      - /path/to/nginx:/opt/recipes/nginx/conf.d
+      - ./nginx:/opt/recipes/nginx/conf.d
       - tandoor-static:/static:ro
-      - /path/to/mediafiles:/opt/recipes/mediafiles
+      - /path/to/mediafiles:/opt/recipes/mediafiles # Update path
     depends_on:
       - tandoor-db
     networks:
@@ -72,6 +72,6 @@ services:
       POSTGRES_PASSWORD: CHANGE_ME
       POSTGRES_USER: djangodb
     volumes:
-      - /path/to/data:/var/lib/postgresql/data
+      - /path/to/data:/var/lib/postgresql/data # Update path
     networks:
       - tandoor-network
