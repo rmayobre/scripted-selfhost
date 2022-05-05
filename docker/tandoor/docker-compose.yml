@@ -33,7 +33,7 @@ services:
       - DEBUG=0 # Defaults to 1 (enabled) and will have more logs.
        # generate a secret key by running "base64 /dev/urandom | head -c50" command
       - SECRET_KEY=CHANGE_ME
-      - GUNICORN_MEDIA=0
+      - GUNICORN_MEDIA=1
       - DB_ENGINE=django.db.backends.postgresql
       - POSTGRES_HOST=tandoor-db
       - POSTGRES_USER=djangodb
