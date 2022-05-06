@@ -29,10 +29,12 @@ services:
     container_name: tandoor-app
     image: vabene1111/recipes
     restart: unless-stopped
+    ports:
+      - 8080:8080
     environment:
       - DEBUG=0 # Defaults to 1 (enabled) and will have more logs.
        # generate a secret key by running "base64 /dev/urandom | head -c50" command
-      - SECRET_KEY=CHANGE_ME
+      - SECRET_KEY=CHANGE_ME  # Provide secret key
       - GUNICORN_MEDIA=1
       - DB_ENGINE=django.db.backends.postgresql
       - POSTGRES_HOST=tandoor-db

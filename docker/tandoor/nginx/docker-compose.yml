@@ -1,0 +1,72 @@
+version: "3.9"
+
+networks:
+  public-network:
+    external: true
+    name: public
+  tandoor-network:
+    name: tandoor-network
+    ipam:
+      driver: default
+      config:
+        - subnet: 10.10.10.0/24
+
+volumes:
+  tandoor-static:
+    name: tandoor-static
+
+services:
+  tandoor-nginx:
+    container_name: tandoor-nginx
+    image: nginx:mainline-alpine
+    restart: unless-stopped
+    ports:
+      - 80:8080
+    volumes:
+      - ./nginx:/etc/nginx/conf.d:ro
+      - tandoor-static:/static:ro
+      - /path/to/mediafiles:/media:ro # Update path
+    depends_on:
+      - tandoor
+    networks:
+      - tandoor-network
+      - public-network
+      
+  tandoor:
+    container_name: tandoor
+    image: vabene1111/recipes
+    restart: unless-stopped
+    volumes:
+      - ./nginx:/opt/recipes/nginx/conf.d
+      - tandoor-static:/static:ro
+      - /path/to/mediafiles:/opt/recipes/mediafiles # Update path
+    depends_on:
+      - tandoor-db
+    networks:
+      tandoor-network:
+        ipv4_address: 10.10.10.3
+    environment:
+      - DEBUG=0
+      - SECRET_KEY=CHANGE_ME # Provide secret key
+      - GUNICORN_MEDIA=0
+      - DB_ENGINE=django.db.backends.postgresql
+      - POSTGRES_HOST=tandoor-db
+      - POSTGRES_USER=djangodb
+      - POSTGRES_PASSWORD=CHANGE_ME # Update to secure password, match db
+      - POSTGRES_PORT=5432
+      - POSTGRES_DB=djangodb
+      - SHOPPING_MIN_AUTOSYNC_INTERVAL=5
+      - REVERSE_PROXY_AUTH=0
+      - COMMENT_PREF_DEFAULT=1
+      
+  tandoor-db:
+    container_name: tandoor-db
+    restart: unless-stopped
+    image: postgres:11-alpine
+    environment:
+      POSTGRES_PASSWORD: CHANGE_ME # Update to secure password, match tandoor
+      POSTGRES_USER: djangodb
+    volumes:
+      - /path/to/data:/var/lib/postgresql/data # Update path
+    networks:
+      - tandoor-network
