@@ -5,3 +5,5 @@ Run the following command for the `SECRET_KEY` environment variable:
 ```
 base64 /dev/urandom | head -c50
 ```
+
+NOTE: Make sure to mount the `nginx` folder 
