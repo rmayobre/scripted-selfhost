@@ -1,9 +1,6 @@
 version: "3.9"
 
 networks:
-  public-network:
-    external: true
-    name: public
   tandoor-network:
     name: tandoor-network
     ipam:
@@ -30,7 +27,6 @@ services:
       - tandoor
     networks:
       - tandoor-network
-      - public-network
       
   tandoor:
     container_name: tandoor
