@@ -4,29 +4,31 @@ services:
   vpn:
     image: ghcr.io/bubuntux/nordvpn
     restart: unless-stopped
+    container_name: nordvpn
     cap_add:
       - NET_ADMIN
       - NET_RAW
     environment:
       - USER=username@email.com # change to your username
-      - "PASS=p@ssword" # change to your password
+      - PASS=p@ssword # change to your password
       - CONNECT=Switzerland # change to desired region/country
       - TECHNOLOGY=NordLynx # don't change unless you want OpenVPN
       - NETWORK=192.168.0.0/24
-      - PORTS=8112:8112
     ports:
       - 8112:8112
+      - 58846:58846 # Default remote port for thin client (change if needed).
     sysctls:
       - net.ipv6.conf.all.disable_ipv6=1
   deluge:
     image: lscr.io/linuxserver/deluge
     restart: unless-stopped
+    container_name: deluge
     network_mode: service:vpn
     depends_on:
       - vpn
     environment:
-      - PUID=1000
-      - PGID=1000
+      - PUID=1000 # You may need to change this based on permissions of your downloads directory.
+      - PGID=1000 # You may need to change this based on permissions of your downloads directory.
       - DELUGE_LOGLEVEL=error
     volumes:
       - /path/to/deluge/config:/config # Change to desired config volume location
